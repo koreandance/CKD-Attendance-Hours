@@ -1,0 +1,153 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CKDC Attendance & Volunteer Log</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@700;800&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#1f2a27;--muted:#62756b;--g:#9dd2b3;--mist:#e6f3ea;--line:#cfe3d6;font-family:"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;color:var(--ink);background:#f2faf4}
+*{box-sizing:border-box}body{margin:0;line-height:1.55}
+header{background:#cfe9d9;color:var(--ink);padding:30px 16px 24px;border-bottom:8px solid;border-image:linear-gradient(90deg,#2f5da8 0 16%,#d0443b 16% 32%,#e5b032 32% 50%,#fff 50% 58%,#3e8e6b 58% 78%,#2f5da8 78% 100%) 1}
+h1,h2{font-family:"Nanum Myeongjo","Noto Serif KR",serif}h1{font-size:clamp(27px,6vw,38px);margin:0 0 4px;font-weight:800}header .sub{color:#3d5a4b;font-size:14px}
+main{max-width:920px;margin:auto;padding:20px 16px 64px}
+.panel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px;margin:16px 0}
+h2{font-size:20px;margin:0 0 12px;color:#2d6a4f}
+label{display:block;font-weight:500;font-size:13px;color:#3d4d46;margin:12px 0 5px}
+input,select,textarea,button{font:inherit}input,select,textarea{width:100%;padding:11px 12px;border:1px solid #b5cfc0;border-radius:10px;background:#fff;color:var(--ink)}
+:is(input,select,textarea,button):focus-visible{outline:3px solid #7cc19b;outline-offset:1px}textarea{min-height:72px}
+button{background:var(--g);color:var(--ink);border:0;border-radius:10px;padding:10px 16px;min-height:44px;font-weight:500;cursor:pointer;margin:6px 6px 4px 0}button:hover{filter:brightness(.96)}
+button.secondary{background:var(--mist);border:1px solid var(--line)}button.on{background:var(--g);border-color:#6fb48d}button.danger{background:#f3c4c8}button:disabled{opacity:.5}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}.time{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.stats{display:grid;grid-template-columns:1.7fr 1fr 1fr;gap:10px}.stat{background:var(--mist);border-radius:12px;padding:14px;text-align:center;font-size:13px;color:var(--muted)}.stat:first-child{background:#bfe5cf;color:#2b4a3b}
+.stat b{display:block;font:800 28px "Nanum Myeongjo",serif;color:var(--ink)}.stat:first-child b{font-size:40px}
+.muted{color:var(--muted);font-size:13px}.item{border-top:1px solid #e3eee7;padding:14px 0}.item:first-child{border-top:0}
+.pill{font-size:12px;font-weight:500;border-radius:20px;padding:2px 10px;background:#fdf0cf;color:#7a5410}.approved{background:#d3f0de;color:#14613b}.rejected{background:#fde2e4;color:#9e2433}
+.hide{display:none}.chip{margin:4px 6px 4px 0}.error{color:#a3303a}
+.checkrow{display:flex;gap:10px;align-items:center;padding:8px 4px;min-height:44px;border-bottom:1px solid #edf4ef;font-weight:400}.checkrow input{width:18px;height:18px;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13px}th{background:var(--mist);color:#2d6a4f;font-weight:500;white-space:nowrap}td,th{border-bottom:1px solid var(--line);text-align:left;padding:9px 10px}
+#editPanel{border-color:#6fb48d;box-shadow:0 0 0 4px #dff1e6}#who{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+@media(max-width:500px){.stats{grid-template-columns:1fr 1fr}.stat:first-child{grid-column:1/-1}.panel{padding:16px}}
+</style></head><body>
+<header><div style="max-width:920px;margin:auto"><h1 lang="ko">시카고 한국무용단</h1><div class="sub">Chicago Korean Dance · Student Attendance & Volunteer Log</div></div></header>
+<main>
+<div class="panel" id="modeNote"></div>
+<div class="panel" id="loginPanel"><h2>Sign in</h2><div id="roleBtns"></div><div id="loginBody"></div></div>
+<div class="panel" id="who"><div id="whoText"></div><button class="secondary" id="out">Switch user</button></div>
+<div class="panel" id="statsPanel"><h2>Hours Summary</h2><div class="stats"><div class="stat">Approved<b id="approved">0.0</b>hours</div><div class="stat">Pending<b id="pending">0.0</b>hours</div><div class="stat">Rejected<b id="rejected">0.0</b>hours</div></div><p class="muted">Only approved hours count toward the official total.</p></div>
+<div class="panel" id="studentPanel"><h2>Submit My Activity</h2><div id="studentForm"></div><button id="studentSubmit">Submit for approval</button></div>
+<div class="panel" id="bulkPanel"><h2>Record for Multiple Students</h2><p class="muted">Duplicates (same student, date, activity, start time) are skipped. Entries by the teacher or president count immediately. Hours have no limit (24 for a full day, or a whole month's total in one entry).</p><div id="bulkForm"></div><label>Select students</label><button class="secondary" id="allStudents">Select all</button><button class="secondary" id="noneStudents">Clear</button><div id="studentChecks"></div><button id="bulkSubmit">Record selected students</button></div>
+<div class="panel" id="rosterPanel"><h2>Student Roster</h2><div class="grid"><div><label>Student name (English)</label><input id="newStudent"></div></div><label>Date of birth (saved once, never shown on screen)</label><div id="newDobBox"></div><button id="addStudent">Add student</button><p class="muted" id="rosterCount"></p><div id="roster"></div></div>
+<div class="panel" id="recordsPanel"><h2>Activity Records</h2>
+<div class="grid"><div><label>Student</label><select id="filterStudent"></select></div><div><label>Status</label><select id="filterStatus"><option value="all">All</option><option value="pending">Pending</option><option value="approved">Approved</option><option value="rejected">Rejected</option></select></div><div><label>Activity type</label><select id="filterCategory"><option value="all">All activities</option></select></div><div><label>Search</label><input id="filterSearch" placeholder="Activity or student"></div><div><label>From</label><input type="date" id="filterFrom"></div><div><label>To</label><input type="date" id="filterTo"></div></div>
+<p class="muted" id="recordCount"></p><div id="records"></div></div>
+<div class="panel" id="summaryPanel"><h2>All Students — Approved Hours</h2><div style="overflow-x:auto"><table><thead id="sumHead"></thead><tbody id="summaryRows"></tbody></table></div><button id="exportSummary">Export summary CSV</button></div>
+<div class="panel" id="adminPanel"><h2>Reports & Passwords</h2><button id="export">Export CSV (Excel)</button><button class="secondary" id="backup">Backup JSON</button><p class="muted">Exports include dates of birth. Keep them private.</p>
+<div id="pwBox"><label>Set Class President password</label><input id="presPw" type="password" placeholder="At least 4 characters"><button id="setPres">Save president password</button></div></div>
+<div class="panel" id="editPanel"><h2>Edit Activity Record</h2><p id="editWho" class="muted"></p><div id="editForm"></div><button id="saveEdit">Save changes</button><button class="secondary" id="cancelEdit">Cancel</button></div>
+<div class="panel" id="auditPanel"><h2>Change History</h2><div id="auditRecords"></div></div>
+</main>
+<script type="module">
+/* ===== Shared data setup: paste your Firebase web config here. Leave null to test on one device only. ===== */
+const FIREBASE=null; /* e.g. {apiKey:"...",authDomain:"...",projectId:"...",appId:"..."} */
+const $=id=>document.getElementById(id),cats=['Dance Class','Performance','Rehearsal','Assistant Teacher','Media','Other Volunteer'];
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const norm=s=>String(s||'').trim().replace(/\s+/g,' ').toLowerCase(),fmt=n=>Number(n||0).toFixed(1),round=n=>Math.round(n*100)/100;
+const today=()=>new Date().toLocaleDateString('en-CA'),uid=()=>crypto.randomUUID?crypto.randomUUID():String(Date.now()+Math.random());
+const sid=n=>norm(n).replace(/[^\p{L}\p{N}]+/gu,'-')||'x';
+const sha=async t=>[...new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode('ckdc|'+t)))].map(x=>x.toString(16).padStart(2,'0')).join('');
+let S={students:{},entries:{},audit:[],pins:{}},cloud=null,P={role:'student',name:''},LR='student',LN='',adding=false,editingId=null;
+try{P=JSON.parse(localStorage.getItem('ckdc_profile'))||P}catch{}
+const LK='ckdc_local_v2',ST=()=>Object.values(S.students),EN=()=>Object.values(S.entries).filter(e=>e.status!=='deleted');
+const authed=()=>P.role==='student'||sessionStorage.getItem('ckdc_auth')===P.role+'|'+P.name,signed=()=>!!P.name&&authed();
+const isT=()=>signed()&&P.role==='teacher',isAdmin=()=>signed()&&P.role!=='student';
+function put(c,id,d){if(cloud)return cloud.F.setDoc(cloud.F.doc(cloud.d,c,id),d).catch(e=>alert('Could not save: '+e.message));
+ if(c==='settings')S.pins=d.pins;else if(c==='audit')S.audit.push(d);else S[c][id]=d;
+ try{localStorage.setItem(LK,JSON.stringify(S))}catch{alert('Could not save on this browser.')}render()}
+async function start(){
+ if(FIREBASE){const B='https://www.gstatic.com/firebasejs/10.12.2/',A=await import(B+'firebase-app.js'),F=await import(B+'firebase-firestore.js');cloud={F,d:F.getFirestore(A.initializeApp(FIREBASE))};
+  for(const c of ['students','entries','audit','settings'])F.onSnapshot(F.collection(cloud.d,c),snap=>{const m={};snap.forEach(x=>m[x.id]=x.data());
+   if(c==='audit')S.audit=Object.values(m);else if(c==='settings')S.pins=(m.pins||{}).pins||{};else S[c]=m;render()},e=>alert('Cannot read shared data: '+e.message))}
+ else try{S={...S,...JSON.parse(localStorage.getItem(LK))}}catch{}
+ render()}
+const sel=(id,opts,ph)=>`<select id="${id}">${ph?`<option value="">${ph}</option>`:''}${opts.map(([v,l])=>`<option value="${v}">${l}</option>`).join('')}</select>`;
+const pad=n=>String(n).padStart(2,'0'),H=[...Array(24).keys()].map(h=>[pad(h),pad(h)]),M=['00','15','30','45'].map(m=>[m,m]);
+function form(p){return `<div class="grid"><div><label>Activity date</label><input id="${p}Date" type="date" value="${today()}"></div><div><label>Activity type</label><select id="${p}Cat">${cats.map(c=>`<option>${c}</option>`).join('')}</select></div><div><label>Start (24-hour)</label><div class="time">${sel(p+'SH',H)}${sel(p+'SM',M)}</div></div><div><label>End (24-hour)</label><div class="time">${sel(p+'EH',H)}${sel(p+'EM',M)}</div></div></div><label>Total hours instead (optional, no limit)</label><input id="${p}Tot" type="number" min="0" step="any" placeholder="e.g. 24, or a whole month's total. Leave empty to use start/end times"><label>Activity details</label><textarea id="${p}Details" placeholder="Class, event, location, or tasks"></textarea>`}
+const MO=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const dobForm=p=>`<div class="time" style="grid-template-columns:2fr 1fr 1.2fr">${sel(p+'M',MO.map((m,i)=>[pad(i+1),m]),'Month')}${sel(p+'D',[...Array(31).keys()].map(d=>[pad(d+1),d+1]),'Day')}${sel(p+'Y',Array.from({length:90},(_,i)=>new Date().getFullYear()-i).map(y=>[y,y]),'Year')}</div>`;
+const readDob=p=>{const m=$(p+'M').value,d=$(p+'D').value,y=$(p+'Y').value;return m&&d&&y?`${y}-${m}-${d}`:''};
+$('studentForm').innerHTML=form('s');$('bulkForm').innerHTML=form('b');$('editForm').innerHTML=form('e');$('newDobBox').innerHTML=dobForm('n');
+for(const p of ['s','b','e']){$(p+'SH').value='10';$(p+'EH').value='11';$(p+'EM').value='30'}
+$('filterCategory').innerHTML+=cats.map(c=>`<option>${c}</option>`).join('');
+function valid(p){const date=$(p+'Date').value,details=$(p+'Details').value.trim(),s=$(p+'SH').value+':'+$(p+'SM').value,e=$(p+'EH').value+':'+$(p+'EM').value;
+ const tot=$(p+'Tot').value.trim(),mins=t=>t.split(':')[0]*60+ +t.split(':')[1],hours=tot!==''?Number(tot):(mins(e)-mins(s))/60;
+ if(!date||!details)return void alert('Enter a date and activity details.');if(date>today())return void alert('Activity date cannot be in the future.');
+ if(tot!==''){if(!Number.isFinite(hours)||hours<=0)return void alert('Enter total hours greater than 0.');return{date,category:$(p+'Cat').value,details,start:'',end:'',hours:round(hours)}}
+ if(hours<=0)return void alert('End time must be later than start time (24-hour clock, same day).');
+ return{date,category:$(p+'Cat').value,details,start:s,end:e,hours}}
+const dup=(name,a,skip)=>EN().some(e=>e.id!==skip&&e.status!=='rejected'&&norm(e.name)===norm(name)&&e.date===a.date&&e.category===a.category&&e.start===a.start&&(a.start||e.hours===a.hours));
+function addEntry(name,a,status){const id=uid();put('entries',id,{id,name,...a,status,enteredBy:P.name,enteredRole:P.role,createdAt:new Date().toISOString(),reviewedBy:status==='approved'?P.name:'',reviewedRole:status==='approved'?P.role:'',reviewedAt:status==='approved'?new Date().toISOString():''})}
+function audit(e,action,notes=''){put('audit',uid(),{at:new Date().toISOString(),actor:P.name,role:P.role,student:e.name,entryId:e.id,action,notes})}
+const addStudent=(name,dob)=>{name=name.trim().replace(/\s+/g,' ');if(!name||!dob||S.students[sid(name)])return false;put('students',sid(name),{name,dob});return true};
+function signIn(role,name){P={role,name};localStorage.setItem('ckdc_profile',JSON.stringify(P));if(role!=='student')sessionStorage.setItem('ckdc_auth',role+'|'+name);render()}
+function renderLogin(){
+ $('roleBtns').innerHTML=[['student','Student'],['president','Class President'],['teacher','Teacher']].map(([r,l])=>`<button class="secondary ${LR===r?'on':''}" data-r="${r}">${l}</button>`).join('');
+ const names=ST().map(s=>s.name).sort((a,b)=>a.localeCompare(b));let h='';
+ if(LR==='teacher')h=`<label>Your name</label><input id="lName" autocomplete="off"><label>Password</label><input id="lPw" type="password">${S.pins.teacher?'':'<p class="muted">No teacher password exists yet. The password you enter now becomes the teacher password.</p>'}<button id="lGo">Sign in</button>`;
+ else if(LN)h=`<p>Signing in as <b>${esc(LN)}</b>. Enter the president password.</p><input id="lPw" type="password"><button id="lGo">Sign in</button><button class="secondary" data-n="">Back</button>`;
+ else if(adding)h=`<label>Your full name (English)</label><input id="lNew" autocomplete="off"><label>Date of birth (asked only once)</label>${dobForm('l')}<button id="addMe">Add me</button><button class="secondary" id="cancelAdd">Back</button>`;
+ else h=`<label>Tap your name</label><div>${names.map(n=>`<button class="secondary chip" data-n="${esc(n)}">${esc(n)}</button>`).join('')||'<p class="muted">No students on the list yet.</p>'}</div>${LR==='student'?'<button id="showAdd">My name is not listed</button>':''}`;
+ $('loginBody').innerHTML=h}
+$('loginPanel').onclick=async e=>{const b=e.target.closest('button');if(!b)return;
+ if(b.dataset.r){LR=b.dataset.r;LN='';adding=false;return renderLogin()}
+ if(b.dataset.n!==undefined){if(LR==='student')return signIn('student',b.dataset.n);LN=b.dataset.n;return renderLogin()}
+ if(b.id==='showAdd'){adding=true;return renderLogin()}if(b.id==='cancelAdd'){adding=false;return renderLogin()}
+ if(b.id==='addMe'){const n=$('lNew').value.trim().replace(/\s+/g,' '),dob=readDob('l');if(!n||!dob)return alert('Enter your name and date of birth.');
+  if(S.students[sid(n)])return alert('That name is already on the list. Go back and tap it.');addStudent(n,dob);adding=false;return signIn('student',n)}
+ if(b.id==='lGo'){const pw=$('lPw').value;if(!pw)return alert('Enter the password.');const h=await sha(pw);
+  if(LR==='teacher'){const n=$('lName').value.trim();if(!n)return alert('Enter your name.');
+   if(!S.pins.teacher)put('settings','pins',{pins:{...S.pins,teacher:h}});else if(S.pins.teacher!==h)return alert('Incorrect password.');return signIn('teacher',n)}
+  if(!S.pins.president)return alert('The teacher must set the president password first.');if(S.pins.president!==h)return alert('Incorrect password.');signIn('president',LN)}};
+$('out').onclick=()=>{P={role:'student',name:''};localStorage.removeItem('ckdc_profile');sessionStorage.removeItem('ckdc_auth');LN='';adding=false;render()};
+const show=(id,c)=>$(id).classList.toggle('hide',!c);
+function render(){
+ const ok=signed(),adm=isAdmin(),t=isT();
+ $('modeNote').innerHTML='<b>Test mode:</b> data is saved on this device only. Add the Firebase settings in the file to share records between phones.';show('modeNote',!cloud);
+ show('loginPanel',!ok);show('who',ok);for(const id of ['statsPanel','recordsPanel'])show(id,ok);
+ show('studentPanel',ok&&P.role!=='teacher');for(const id of ['bulkPanel','rosterPanel','summaryPanel','adminPanel','auditPanel'])show(id,adm);show('pwBox',t);if(!editingId)show('editPanel',false);
+ if(!ok)return renderLogin();
+ $('whoText').innerHTML=`Signed in as <b>${esc(P.name)}</b> · ${P.role==='president'?'Class President':P.role==='teacher'?'Teacher':'Student'}`;
+ const mine=adm?EN():EN().filter(e=>norm(e.name)===norm(P.name));
+ for(const s of ['approved','pending','rejected'])$(s).textContent=fmt(mine.filter(e=>e.status===s).reduce((a,e)=>a+e.hours,0));
+ const names=ST().map(s=>s.name).sort((a,b)=>a.localeCompare(b));
+ $('studentChecks').innerHTML=names.map(n=>`<label class="checkrow"><input type="checkbox" class="studentCheck" value="${esc(n)}">${esc(n)}</label>`).join('')||'<p class="muted">Add students to the roster first.</p>';
+ $('rosterCount').textContent=names.length+' student(s)';$('roster').innerHTML=names.map(n=>`<span class="pill approved chip">${esc(n)}</span>`).join('');
+ const f=$('filterStudent').value;$('filterStudent').innerHTML='<option value="all">All students</option>'+names.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join('');$('filterStudent').value=adm&&(names.includes(f)||f==='all')?f||'all':'all';$('filterStudent').disabled=!adm;
+ if(adm)renderSummary();renderRecords()}
+function summaryData(){return ST().map(st=>{const rows=EN().filter(e=>norm(e.name)===norm(st.name)),ap=rows.filter(e=>e.status==='approved'),sum=a=>round(a.reduce((v,e)=>v+e.hours,0));return[st.name,sum(ap),sum(rows.filter(e=>e.status==='pending')),...cats.map(c=>sum(ap.filter(e=>e.category===c)))]}).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]))}
+function renderSummary(){$('sumHead').innerHTML='<tr>'+['Student','Approved','Pending',...cats].map(h=>`<th>${h}</th>`).join('')+'</tr>';$('summaryRows').innerHTML=summaryData().map(r=>'<tr>'+r.map((v,i)=>`<td>${esc(i?v.toFixed(1):v)}</td>`).join('')+'</tr>').join('')||'<tr><td colspan="9">No students yet.</td></tr>'}
+function renderRecords(){const adm=isAdmin(),name=$('filterStudent').value,st=$('filterStatus').value,cat=$('filterCategory').value,term=$('filterSearch').value.trim().toLowerCase(),from=$('filterFrom').value,to=$('filterTo').value;
+ const list=EN().filter(e=>(adm?(name==='all'||e.name===name):norm(e.name)===norm(P.name))&&(st==='all'||e.status===st)&&(cat==='all'||e.category===cat)&&(!from||e.date>=from)&&(!to||e.date<=to)&&(!term||[e.name,e.details,e.category,e.enteredBy].some(v=>String(v||'').toLowerCase().includes(term)))).sort((a,b)=>b.date.localeCompare(a.date)||b.createdAt.localeCompare(a.createdAt));
+ $('recordCount').textContent=list.length+' record(s)';
+ $('records').innerHTML=list.map(e=>{const own=norm(e.name)===norm(P.name),canEdit=adm||(own&&e.status==='pending'),canAp=adm&&e.status==='pending';
+  return `<div class="item"><strong>${esc(e.name)}</strong> · ${esc(e.date)} <span class="pill ${e.status}">${esc(e.status)}</span><div><strong>${esc(e.category)}</strong> · ${e.start?esc(e.start)+'–'+esc(e.end)+' · ':''}${fmt(e.hours)} h</div><div>${esc(e.details)}</div><div class="muted">Entered by ${esc(e.enteredBy)} (${esc(e.enteredRole)})${e.reviewedBy?` · Reviewed by ${esc(e.reviewedBy)} (${esc(e.reviewedRole||'')})`:''}</div>${canEdit?`<button class="secondary" data-a="edit" data-id="${esc(e.id)}">Edit</button><button class="danger" data-a="delete" data-id="${esc(e.id)}">Delete</button>`:''}${!adm&&e.status==='approved'?`<button class="secondary" data-a="request" data-id="${esc(e.id)}">Request correction</button>`:''}${canAp?`<button data-a="approve" data-id="${esc(e.id)}">Approve</button>`:''}${adm&&e.status==='pending'?`<button class="danger" data-a="reject" data-id="${esc(e.id)}">Reject</button>`:''}${e.correctionRequest?`<p class="error">Correction requested: ${esc(e.correctionRequest)}</p>`:''}</div>`}).join('')||'<p class="muted">No records found.</p>';
+ if(adm)$('auditRecords').innerHTML=S.audit.slice().sort((a,b)=>b.at.localeCompare(a.at)).slice(0,100).map(a=>`<div class="item"><strong>${esc(a.action)}</strong> · ${esc(a.student)}<div class="muted">${esc(a.actor)} (${esc(a.role)}) · ${esc(a.at)}</div><small>${esc(a.notes)}</small></div>`).join('')||'<p class="muted">No changes yet.</p>'}
+['filterCategory','filterSearch','filterFrom','filterTo','filterStudent','filterStatus'].forEach(id=>$(id).addEventListener('input',renderRecords));
+$('studentSubmit').onclick=()=>{if(P.role==='teacher'||!signed())return;const a=valid('s');if(!a)return;if(dup(P.name,a))return alert('Duplicate entry: this activity is already recorded for you.');addEntry(P.name,a,P.role==='president'?'approved':'pending');$('sDetails').value='';$('sTot').value='';alert(P.role==='president'?'Recorded. Your hours count right away.':'Submitted. Hours count after approval.')};
+$('addStudent').onclick=()=>{if(!isAdmin())return;if(!addStudent($('newStudent').value,readDob('n')))return alert('Enter a new name and a date of birth.');$('newStudent').value='';for(const x of 'MDY')$('n'+x).value=''};
+$('allStudents').onclick=()=>document.querySelectorAll('.studentCheck').forEach(c=>c.checked=true);$('noneStudents').onclick=()=>document.querySelectorAll('.studentCheck').forEach(c=>c.checked=false);
+$('bulkSubmit').onclick=()=>{if(!isAdmin())return;const a=valid('b');if(!a)return;const ns=[...document.querySelectorAll('.studentCheck:checked')].map(c=>c.value);if(!ns.length)return alert('Select students.');let n=0,k=0;for(const x of ns){if(dup(x,a)){k++;continue}addEntry(x,a,'approved');n++}alert(`${n} recorded; ${k} duplicate(s) skipped.`)};
+$('records').onclick=e=>{const b=e.target.closest('button[data-a]');if(!b)return;const en=S.entries[b.dataset.id];if(!en)return;const a=b.dataset.a,adm=isAdmin(),own=norm(en.name)===norm(P.name);
+ if(a==='request'){if(adm||!own||en.status!=='approved')return;const n=prompt('What needs to be corrected?');if(!n||!n.trim())return;put('entries',en.id,{...en,correctionRequest:n.trim()});return audit(en,'correction requested',n.trim())}
+ if(a==='edit'){if(!adm&&(!own||en.status!=='pending'))return;editingId=en.id;$('eDate').value=en.date;$('eCat').value=en.category;if(en.start){[$('eSH').value,$('eSM').value]=en.start.split(':');[$('eEH').value,$('eEM').value]=en.end.split(':')}$('eDetails').value=en.details;$('eTot').value=en.start?'':en.hours;$('editWho').textContent=en.name+' · '+en.status;show('editPanel',true);$('editPanel').scrollIntoView({behavior:'smooth'});return}
+ if(a==='delete'){if(!adm&&(!own||en.status!=='pending'))return;if(!confirm('Delete this record? This will be logged.'))return;audit(en,'deleted',JSON.stringify({date:en.date,category:en.category,hours:en.hours,details:en.details}));return put('entries',en.id,{...en,status:'deleted',deletedBy:P.name,deletedAt:new Date().toISOString()})}
+ if(!adm||en.status!=='pending')return;
+ put('entries',en.id,{...en,status:a==='approve'?'approved':'rejected',reviewedBy:P.name,reviewedRole:P.role,reviewedAt:new Date().toISOString()});audit(en,a)};
+$('cancelEdit').onclick=()=>{editingId=null;show('editPanel',false)};
+$('saveEdit').onclick=()=>{const en=S.entries[editingId];if(!en)return;const adm=isAdmin();if(!adm&&(en.status!=='pending'||norm(en.name)!==norm(P.name)))return;const a=valid('e');if(!a)return;if(dup(en.name,a,en.id))return alert('Duplicate entry: already recorded.');
+ const before={date:en.date,category:en.category,details:en.details,hours:en.hours,start:en.start,end:en.end,status:en.status};
+ put('entries',en.id,{...en,...a,status:adm?'approved':'pending',reviewedBy:adm?P.name:'',reviewedRole:adm?P.role:'',reviewedAt:adm?new Date().toISOString():'',correctionRequest:''});audit(en,'edited',JSON.stringify({before,after:a}));editingId=null;show('editPanel',false);alert(adm?'Saved.':'Saved. Edited records need approval again.')};
+$('setPres').onclick=async()=>{if(!isT())return;const p=$('presPw').value;if(p.length<4)return alert('Use at least 4 characters.');put('settings','pins',{pins:{...S.pins,president:await sha(p)}});$('presPw').value='';alert('President password saved.')};
+const csv=v=>{v=String(v??'');if(/^[=+\-@\t\r]/.test(v))v="'"+v;return '"'+v.replace(/"/g,'""')+'"'};
+function download(n,c,t){const u=URL.createObjectURL(new Blob([c],{type:t})),a=document.createElement('a');a.href=u;a.download=n;a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)}
+const toCsv=r=>'\ufeff'+r.map(x=>x.map(csv).join(',')).join('\r\n');
+$('exportSummary').onclick=()=>isAdmin()&&download('CKDC_Student_Hours_Summary.csv',toCsv([['Student','Approved Hours','Pending Hours',...cats],...summaryData()]),'text/csv;charset=utf-8');
+$('export').onclick=()=>isAdmin()&&download('CKDC_Attendance.csv',toCsv([['Student','Date of Birth','Date','Activity','Start','End','Details','Hours','Status','Entered By','Entered Role','Reviewed By','Reviewed At','Correction Request'],...EN().map(e=>[e.name,S.students[sid(e.name)]?.dob||'',e.date,e.category,e.start||'',e.end||'',e.details,e.hours,e.status,e.enteredBy,e.enteredRole,e.reviewedBy,e.reviewedAt,e.correctionRequest||''])]),'text/csv;charset=utf-8');
+$('backup').onclick=()=>isAdmin()&&download('CKDC_Backup.json',JSON.stringify({students:S.students,entries:S.entries,audit:S.audit},null,2),'application/json');
+start();
+</script></body></html>
